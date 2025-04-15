@@ -40,6 +40,11 @@
     font-size: clamp(4vw, 1.4rem, 3em);
 }
 
+#timeInterval {
+    height: 2.5em;
+    padding: 0 8px;
+}
+
 pre {
     border-radius: var(--border-radius);
 }

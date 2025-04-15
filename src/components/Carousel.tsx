@@ -25,10 +25,8 @@ const Carousel: React.FC<CarouselProps> = ({
         try {
             if (!document.fullscreenElement) {
                 await presentationRef.current.requestFullscreen();
-                setIsFullscreen(true);
             } else {
                 await document.exitFullscreen();
-                setIsFullscreen(false);
             }
         } catch (err) {
             console.error('Fullscreen error:', err);
@@ -67,6 +65,19 @@ const Carousel: React.FC<CarouselProps> = ({
     }
 
     useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(Boolean(document.fullscreenElement));
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => {
+            document.removeEventListener(
+                'fullscreenchange',
+                handleFullscreenChange,
+            );
+        };
+    }, []);
+
+    useEffect(() => {
         let interval: NodeJS.Timeout;
         if (autoplay) {
             interval = setInterval(
@@ -98,9 +109,6 @@ const Carousel: React.FC<CarouselProps> = ({
                 case 'ArrowLeft':
                     prevSlide();
                     break;
-                case 'Escape':
-                    toggleFullscreen();
-                    break;
             }
         };
 
@@ -115,27 +123,34 @@ const Carousel: React.FC<CarouselProps> = ({
                     {JSON.stringify({ autoplay, cycle, timeInterval }, null, 2)}
                 </code>
             </pre>
-            <div className='controls'>
-                <span>
-                    Slide {slideIndex + 1} of {slides.length}
-                </span>
-                <button
-                    onClick={prevSlide}
-                    disabled={slideIndex === 0 && !cycle}
-                >
-                    ⮜
-                </button>
-                <button title='Start Presentation' onClick={toggleFullscreen}>
-                    🖵
-                </button>
-                <button
-                    onClick={nextSlide}
-                    disabled={slideIndex === slides.length - 1 && !cycle}
-                >
-                    ⮞
-                </button>
-            </div>
-            <div ref={presentationRef} className='container'>
+            <div
+                ref={presentationRef}
+                className={`container ${isFullscreen ? 'fullscreen' : ''}`}
+            >
+                <div className='controls'>
+                    <span>
+                        Slide {slideIndex + 1} of {slides.length}
+                    </span>
+                    <button
+                        onClick={prevSlide}
+                        disabled={slideIndex === 0 && !cycle}
+                    >
+                        {'<'}
+                    </button>
+                    <button
+                        title={`${isFullscreen ? 'Exit' : 'Start'} Presentation`}
+                        onClick={toggleFullscreen}
+                        style={{ fontSize: '1rem' }}
+                    >
+                        {isFullscreen ? 'Exit' : 'Start'}
+                    </button>
+                    <button
+                        onClick={nextSlide}
+                        disabled={slideIndex === slides.length - 1 && !cycle}
+                    >
+                        {'>'}
+                    </button>
+                </div>
                 {slides.map((_, index) => {
                     return (
                         <div
